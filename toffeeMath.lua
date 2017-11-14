@@ -80,8 +80,7 @@ function axisAlignedDetect(box1, box2)
     P2 = {x = 0, y = 1}
 --Later this should find normals, instead of using hard-coded P vectors
     XIntersect = findSeperatingAxis(A, B, C, P1)
-    if XIntersect > 0 then return false end
     YIntersect = findSeperatingAxis(A, B, C, P2)
 --Return the shortest distance
-    if XIntersect < YIntersect then return XIntersect else return YIntersect end
+    if XIntersect > YIntersect then return YIntersect else return XIntersect end
 end

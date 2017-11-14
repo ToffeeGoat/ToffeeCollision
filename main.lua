@@ -1,12 +1,13 @@
 --Hello wonderful world of misery!
 require "toffeeMath"
 function love.load()
-    player = {x = 200, y = 20, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
+    player = {x = 200, y = 20, speed = 0, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
     wall = {x = 200, y = 300, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
     speed = 4
 end
 
 function love.update(dt)
+--[[MOVEMENT
     if love.keyboard.isDown('left') then
         player.x = player.x - speed
     end
@@ -19,8 +20,18 @@ function love.update(dt)
     if love.keyboard.isDown('down') then
         player.y = player.y + speed
     end
+]]
+    if test ~= 0 then player.speed = player.speed + 0.1 end
+    if player.speed > 10 then player.speed = 10 end
+
+    print(player.speed)
+    player.y = player.y + player.speed
     test = axisAlignedDetect(player, wall)
-    if test and test < 0 then
+    print(test)
+    if test < 0 then
+        player.speed = 0
+        player.y = player.y + test
+        test = 0
         print("INTERSECTION")
     else
         print("We good fam")
