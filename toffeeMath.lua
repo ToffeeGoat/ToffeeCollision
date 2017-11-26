@@ -9,6 +9,18 @@ function sq(x)
   return x*x
 end
 
+--Returns a value from a table, looping around it using it's length
+function tableLoop(table, key)
+    local newKey = key
+    if key < 1 then
+        newKey = key + #table
+    end
+    if newKey > #table then
+        newKey = newKey - #table
+    end
+    return table[newKey]
+end
+
 --Use this to add or subtract from a direction while keeping things in 0-359 space
 function addDeg(angle, addition)
     newAng = angle + addition
@@ -112,7 +124,7 @@ function findNearest(point, object)
       dis = getDistance(point, coordAddition(getPos(object), vert))
     if closestVert == nil or dis < closestDis then
       closestDis = dis
-      closestVert = vert
+      closestVert = i
     end
   end
   return closestVert
@@ -120,11 +132,7 @@ end
 
 --returns a normals of a hitbox as a unit vector (magnitude 1)
 function getNormal(hitbox, number)
-    if number < #hitbox then
-      vec = coordSubtraction(hitbox[number + 1], hitbox[number])
-    else
-      vec = coordSubtraction(hitbox[1], hitbox[number])
-    end
+    vec = coordSubtraction(tableLoop(hitbox, number + 1), tableLoop(hitbox, number))
     angle = addDeg(getDirection(vec.x, vec.y), -90)
     return {direction = angle, magnitude = 1}
 end
@@ -153,11 +161,18 @@ end
 --This function solves collision for two axis-aligned bounding boxes.
 function findIntersection(shape1, shape2)
     local displacement = 99999999
-    for i, k in pairs(shape2.hitbox) do
-        local normal = getNormal(shape2.hitbox, i)
-        print(normal.direction)
-        local test1 = hitboxProj(shape2, vectorToCoord(normal.direction, 1))
-        local test2 = hitboxProj(shape1, vectorToCoord(normal.direction, 1))
+    closest1 = findNearest(shape1, shape2)
+    closest2 = findNearest(shape2, shape1)
+    normals = {
+        getNormal(shape1.hitbox, closest1),
+        getNormal(shape1.hitbox, closest1-1),
+        getNormal(shape1.hitbox, closest2),
+        getNormal(shape1.hitbox, closest2-1)
+    }
+    for i, nrm in pairs(normals) do
+        print(nrm.direction)
+        local test1 = hitboxProj(shape2, vectorToCoord(nrm.direction, 1))
+        local test2 = hitboxProj(shape1, vectorToCoord(nrm.direction, 1))
         if test1.min > test2.max or test2.min > test1.max then
             --This is a seperating axis, therefore there is no collison.
             return false
@@ -168,7 +183,7 @@ function findIntersection(shape1, shape2)
             local disp2 = test2.max - test1.min
             if disp1 < displacement or disp2 < displacement then
                 displacement = math.min(disp1, disp2)
-                dispAngle = normal.direction
+                dispAngle = nrm.direction
             end
         end
     end
