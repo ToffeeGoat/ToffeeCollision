@@ -97,6 +97,7 @@ end
 
 
 --This function is given four vectors, and tests the length of the projection
+--NOTE, this is now redundant for polygon solving, but it's still ideal for AABBs
 function findSeperatingAxis(a, b, c, p)
   vectorZero = {x = 0, y = 0}
   projA = getDistance(vectorZero, vectorProj(a, p))
@@ -122,42 +123,60 @@ function findNearest(point, object)
   return closestVert
 end
 
---returns all normals of a hitbox as unit vectors (magnitude 1)
-function getNormal(hitbox)
-  local normals = {}
-  for i, nrm in pairs(hitbox) do
-    if i < #hitbox then
-      vec = vectorSubtraction(hitbox[i + 1], hitbox[i])
+--returns a normals of a hitbox as a unit vector (magnitude 1)
+function getNormal(hitbox, number)
+    if number < #hitbox then
+      vec = vectorSubtraction(hitbox[number + 1], hitbox[number])
     else
-      vec = vectorSubtraction(hitbox[1], hitbox[i])
+      vec = vectorSubtraction(hitbox[1], hitbox[number])
     end
     angle = addDeg(getDirection(vec.x, vec.y), -90)
-    newNormal = {direction = angle, magnitude = 1}
-    table.insert(normals, newNormal)
-  end
-  return normals
+    return {direction = angle, magnitude = 1}
+end
+
+--Finds the highest and lowest points of a hitbox on a projected vector
+function hitboxProj(object, P)
+projMax = nil
+projMin = nil
+--NOTE the magnitude here is larger than any shape will be.
+--If any shape ends up becoming larger, a bigger magnitude will be needed.
+tinyCoord = vectorToCoord(getDirection(P.x, P.y), -1000)
+    for i, vert in pairs(object.hitbox) do
+        proj = vectorProj(vectorAddition(object,vert), P)
+        projDist = getDistance(tinyCoord, proj)
+        if projMax == nil or projMax.distance < projDist then
+            projMax = {v = vert, distance = projDist}
+        end
+        if projMin == nil or projMin.distance > projDist then
+            projMin = {v = vert, distance = projDist}
+        end
+    end
+    --NOTE this should probably return a vert at some point too.
+return {min = projMin.distance, max = projMax.distance}
 end
 
 --This function solves collision for two axis-aligned bounding boxes.
 --Should be updated later to find normals, so it can solve complex shapes.
 --NOTE this should return false and exit the function if it finds a seperating axis
-function axisAlignedDetect(box1, box2)
-  --These should use .getPos in the future!
-  A = findNearest(getPos(box2), box1)
-  B = findNearest(getPos(box1), box2)
-  C = {x = box2.x - box1.x, y = box2.y - box1.y}
-  P1 = {x = 1, y = 0}
-  P2 = {x = 0, y = 1}
-  --Later this should find normals, instead of using hard-coded P vectors
-  XIntersect = findSeperatingAxis(A, B, C, P1)
-  YIntersect = findSeperatingAxis(A, B, C, P2)
-  --Return the shortest distance
-  --make it return the direction too
+function findIntersection(shape1, shape2)
+    local displacement = 0
+    for i, k in pairs(shape1.hitbox) do
+        local normal = getNormal(shape1.hitbox, i)
+        local test1 = hitboxProj(shape1, vectorToCoord(normal.direction, 1))
+        local test2 = hitboxProj(shape2, vectorToCoord(normal.direction, 1))
+        if test1.min > test2.max or test2.min > test1.max then
+            --This is a seperating axis, therefore there is no collison.
+            print(test1.min ..'   '.. test1.max)
+            print(test2.min ..'   '.. test2.max)
+            return false
+        else
+            --This side does intersect.
+            --calculate displacement
+            displacement = math.min(displacement, test1.max - test2.min, test2.max - test1.min)
+            testDisp1 = test1.max - test2.min
+            testDisp2 = test2.max - test1.min
 
-  if XIntersect < YIntersect then
-    return {direction = getDirection(P2.x, P2.y), magnitude = YIntersect}
-  else
-    return {direction = getDirection(P1.x, P1.y), magnitude = XIntersect}
-  end
-
+        end
+    end
+return true
 end
