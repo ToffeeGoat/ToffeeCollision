@@ -1,16 +1,20 @@
 --Hello wonderful world of misery!
+--NOTE addImpulse is broken
+
 
 require "toffeeMath"
 
 function love.load()
-    player = {x = 200, y = 20, direction, speed = 0, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
+  --NOTE THESE HITBOXES ARE NOT STORED CLOCKWISE
+    player = {x = 200, y = 20, direction = 180, speed = 5, hitbox = {{x = -10, y = -10},{x = -10, y = 10},{x = 10, y = 10},{x = 10, y = -10}}}
   --  wall = {x = 200, y = 300, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
     walls = {}
-    gravity = {direction = 180, speed = 0.1}
+    gravity = {direction = 180, speed = 0.4}
+    jump = {direction = 0, speed = 8}
     speed = 4
     onGround = false
     for i = 1, 20 do
-      newWall =  {x = 20 * i, y = 300, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
+      newWall =  {x = 20 * i, y = 300, hitbox = {{x = -10, y = -10},{x = -10, y = 10},{x = 10, y = 10},{x = 10, y = -10}}}
       table.insert(walls, newWall)
     end
 end
@@ -30,14 +34,14 @@ function love.update(dt)
 
 ]]
     if love.keyboard.isDown('up') and onGround then
-        player.speed = -5
+        addImpulse(player, jump)
         onGround = false
     end
 
     --Add gravity impulse
+    --
     if test ~= 0 or onGround == false then
-
-        player.speed = player.speed + 0.1
+        addImpulse(player, gravity)
     end
 
     --Don't go too fast
@@ -45,21 +49,24 @@ function love.update(dt)
         player.speed = 10
     end
 
-    player.y = player.y + player.speed
+--Move player
+--NOTE this needs to be re-ordered, player movement should occur after collision detection
+newPos = vectorToCoord(player.direction, player.speed)
+player.x = player.x + newPos.x
+player.y = player.y + newPos.y
+
     for i, wall in pairs(walls) do
         test = axisAlignedDetect(player, wall)
-        print(test)
         if test.magnitude < 0 then
-            player.speed = 0
-            player.y = player.y + test.magnitude
-            test = 0
+              player.speed = 0
+              player.y = player.y + test.magnitude
+              test = 0
             onGround = true
           --  print("INTERSECTION")
         else
           --  print("We good fam")
         end
     end
-print(player.x .. '    ' .. player.y .. '    ' .. player.speed)
 end
 
 function love.draw()

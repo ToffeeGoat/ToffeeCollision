@@ -2,7 +2,10 @@
 --NOTE Objects are stored as:
 Object = {x, y, hitbox{vert1, vert2, etc.}}
 The hitbox verts are stored clockwise.
+NOTE this vector notation is bad. Should use coord and vector to differentiate.
 --Vector math currently assumes that 'vectors' are stored as {x,y}
+
+
 
 --Multiplies by itself
 ]]
@@ -19,22 +22,25 @@ function getDirection(x, y)
   if x == 0 and y > 0 then angle = math.pi/2 end
   if x == 0 and y == 0 then angle = -math.pi/2 end
   if x == 0 and y == 0 then angle = 0 end
-  angle = math.deg(angle)
+  --Add 90 to it, so that 0 is up. Change this to change 0
+  angle = math.deg(angle) + 90
   if angle < 0 then angle = angle + 360 end
   return angle
 end
 
 --turns a real vector into a coordinate
 function vectorToCoord(angle, magnitude)
-  xCoord = magnitude * math.cos(math.rad(angle))
-  yCoord = magnitude * math.sin(math.rad(angle))
+  --Angle needs to be adjusted because trig.
+  local trigAngle = angle - 90
+  xCoord = magnitude * math.cos(math.rad(trigAngle))
+  yCoord = magnitude * math.sin(math.rad(trigAngle))
   return {x = xCoord, y = yCoord}
 end
 
   --adds and impulse to the currect real vector of an Object
 function addImpulse(object, impulse)
-  objectCoord = vectorToCoord(object.direction, object.speed)
-  impulseCoord = vectorToCoord(impulse.direction, impulse.speed)
+  objectCoord = vectorToCoord((object.direction), (object.speed))
+  impulseCoord = vectorToCoord((impulse.direction), (impulse.speed))
   newSpeed = vectorAddition(objectCoord, impulseCoord)
   object.direction = getDirection(newSpeed.x, newSpeed.y)
   vectorZero = {x = 0, y = 0}
@@ -103,8 +109,25 @@ function findNearest(point, object)
   return closestVert
 end
 
+--returns all normals of a hitbox as unit vectors (magnitude 1)
+function getNormal(hitbox)
+  local normals = {}
+  for i, nrm in pairs(hitbox) do
+    if i < #hitbox then
+      vec = vectorSubtraction(hitbox[i], hitbox[i + 1])
+    else
+      vectorSubtraction(hitbox[i], hitbox[1])
+    end
+    angle = getDirection(vec.x, vec.y) - 90
+    newNormal = {direction = angle, magnitude = 1}
+    table.insert(normals, newNormal)
+  end
+  return normals
+end
+
 --This function solves collision for two axis-aligned bounding boxes.
 --Should be updated later to find normals, so it can solve complex shapes.
+--NOTE this should return false and exit the function if it finds a seperating axis
 function axisAlignedDetect(box1, box2)
   --These should use .getPos in the future!
   A = findNearest(getPos(box2), box1)
