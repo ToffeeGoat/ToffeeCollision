@@ -1,14 +1,10 @@
 --[[
---NOTE Objects are stored as:
+NOTE Objects are stored as:
 Object = {x, y, hitbox{vert1, vert2, etc.}}
-The hitbox verts are stored clockwise.
-NOTE this vector notation is bad. Should use coord and vector to differentiate.
---Vector math currently assumes that 'vectors' are stored as {x,y}
-
-
+The hitbox verts must be stored clockwise.
+]]
 
 --Multiplies by itself
-]]
 function sq(x)
   return x*x
 end
@@ -23,8 +19,6 @@ function addDeg(angle, addition)
     end
     return newAng
 end
-
-
 
 --uses atan 2 to convert a coordinate into a direction
 function getDirection(x, y)
@@ -50,11 +44,11 @@ function vectorToCoord(angle, magnitude)
   return {x = xCoord, y = yCoord}
 end
 
-  --adds and impulse to the currect real vector of an Object
+  --adds an impulse to the currect real vector of an Object
 function addImpulse(object, impulse)
   objectCoord = vectorToCoord((object.direction), (object.magnitude))
   impulseCoord = vectorToCoord((impulse.direction), (impulse.magnitude))
-  newMagnitude = vectorAddition(objectCoord, impulseCoord)
+  newMagnitude = coordAddition(objectCoord, impulseCoord)
   object.direction = getDirection(newmagnitude.x, newMagnitude.y)
   vectorZero = {x = 0, y = 0}
   object.magnitude = getDistance(vectorZero, newMagnitude)
@@ -72,14 +66,14 @@ function getDistance(v1, v2)
 end
 
 --Add x and y to that of another table.
-function vectorAddition(v1, v2)
+function coordAddition(v1, v2)
   vecX = v1.x + v2.x
   vecY = v1.y + v2.y
   return {x = vecX, y = vecY}
 end
 
---Reverse of vectorAddition
-function vectorSubtraction(v1, v2)
+--Reverse of coordAddition
+function coordSubtraction(v1, v2)
   vecX = v1.x - v2.x
   vecY = v1.y - v2.y
   return {x = vecX, y = vecY}
@@ -89,7 +83,9 @@ function dotProduct(v1, v2)
   return v1.x * v2.x + v1.y * v2.y
 end
 
+
 --Projects v1 onto v2 and returns the projected vector.
+--Note that this does not use vectors, but coordinates
 function vectorProj(v1, v2)
   local proj = dotProduct(v1, v2)/(sq(v2.x) + sq(v2.y))
   return {x = proj*v2.x, y = proj*v2.y}
@@ -113,8 +109,7 @@ function findNearest(point, object)
   closestDis = nil
   closestVert = nil
   for i, vert in pairs(object.hitbox) do
-
-    dis = getDistance(point, vectorAddition(getPos(object), vert))
+      dis = getDistance(point, coordAddition(getPos(object), vert))
     if closestVert == nil or dis < closestDis then
       closestDis = dis
       closestVert = vert
@@ -126,9 +121,9 @@ end
 --returns a normals of a hitbox as a unit vector (magnitude 1)
 function getNormal(hitbox, number)
     if number < #hitbox then
-      vec = vectorSubtraction(hitbox[number + 1], hitbox[number])
+      vec = coordSubtraction(hitbox[number + 1], hitbox[number])
     else
-      vec = vectorSubtraction(hitbox[1], hitbox[number])
+      vec = coordSubtraction(hitbox[1], hitbox[number])
     end
     angle = addDeg(getDirection(vec.x, vec.y), -90)
     return {direction = angle, magnitude = 1}
@@ -142,7 +137,7 @@ projMin = nil
 --If any shape ends up becoming larger, a bigger magnitude will be needed.
 tinyCoord = vectorToCoord(getDirection(P.x, P.y), -1000)
     for i, vert in pairs(object.hitbox) do
-        proj = vectorProj(vectorAddition(object,vert), P)
+        proj = vectorProj(coordAddition(object,vert), P)
         projDist = getDistance(tinyCoord, proj)
         if projMax == nil or projMax.distance < projDist then
             projMax = {v = vert, distance = projDist}
@@ -158,24 +153,9 @@ end
 --This function solves collision for two axis-aligned bounding boxes.
 function findIntersection(shape1, shape2)
     local displacement = 99999999
-    for i, k in pairs(shape1.hitbox) do
-        local normal = getNormal(shape1.hitbox, i)
-        local test1 = hitboxProj(shape1, vectorToCoord(normal.direction, 1))
-        local test2 = hitboxProj(shape2, vectorToCoord(normal.direction, 1))
-        if test1.min > test2.max or test2.min > test1.max then
-            --This is a seperating axis, therefore there is no collison.
-            return false
-        else
-            --This side does intersect.
-            --calculate displacement
-            displacement = math.min(displacement, test1.max - test2.min, test2.max - test1.min)
-            testDisp1 = test1.max - test2.min
-            testDisp2 = test2.max - test1.min
-
-        end
-    end
     for i, k in pairs(shape2.hitbox) do
         local normal = getNormal(shape2.hitbox, i)
+        print(normal.direction)
         local test1 = hitboxProj(shape2, vectorToCoord(normal.direction, 1))
         local test2 = hitboxProj(shape1, vectorToCoord(normal.direction, 1))
         if test1.min > test2.max or test2.min > test1.max then
@@ -184,11 +164,13 @@ function findIntersection(shape1, shape2)
         else
             --This side does intersect.
             --calculate displacement
-            displacement = math.min(displacement, test1.max - test2.min, test2.max - test1.min)
-            testDisp1 = test1.max - test2.min
-            testDisp2 = test2.max - test1.min
-
+            local disp1 = test1.max - test2.min
+            local disp2 = test2.max - test1.min
+            if disp1 < displacement or disp2 < displacement then
+                displacement = math.min(disp1, disp2)
+                dispAngle = normal.direction
+            end
         end
     end
-return displacement
+return {direction = dispAngle, magnitude = displacement}
 end

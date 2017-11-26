@@ -5,12 +5,20 @@
 require "toffeeMath"
 function love.load()
     box1 = {x = 200, y = 230, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
-    box2 = {x = 200, y = 230, hitbox = pentagon(50)}
-    speed = 1
+    box2 = {x = 200, y = 230, hitbox = polygon(6, 50)}
+    box3 = {x = 200, y = 230, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
+    speed = 3
 end
 
 function love.update(dt)
-    print(findIntersection(box1, box2))
+    intersect = (findIntersection(box1, box2))
+    if intersect then
+        newPos = vectorToCoord(intersect.direction, intersect.magnitude)
+    else
+        newPos = {x = 0, y = 0}
+    end
+    box3.x = box1.x + newPos.x
+    box3.y = box1.y + newPos.y
 
     if love.keyboard.isDown('down') then
         box1.y = box1.y + speed
@@ -31,14 +39,17 @@ function love.draw()
     love.graphics.setColor(200, 200, 200)
     drawHitbox(box2)
     drawHitbox(box1)
+    love.graphics.line(box1.x, box1.y, box2.x, box2.y)
+    love.graphics.setColor(200, 0, 0)
+    drawHitbox(box3)
 end
 
-function pentagon(radius)
+function polygon(sides, radius)
     local direction = 0
     local verts = {}
-    for i = 1, 5 do
+    for i = 1, sides do
         newVert = vectorToCoord(direction, radius)
-        direction = direction + 72
+        direction = direction + 360/sides
         table.insert(verts, newVert)
     end
     return verts
