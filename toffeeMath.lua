@@ -156,18 +156,14 @@ return {min = projMin.distance, max = projMax.distance}
 end
 
 --This function solves collision for two axis-aligned bounding boxes.
---Should be updated later to find normals, so it can solve complex shapes.
---NOTE this should return false and exit the function if it finds a seperating axis
 function findIntersection(shape1, shape2)
-    local displacement = 0
+    local displacement = 99999999
     for i, k in pairs(shape1.hitbox) do
         local normal = getNormal(shape1.hitbox, i)
         local test1 = hitboxProj(shape1, vectorToCoord(normal.direction, 1))
         local test2 = hitboxProj(shape2, vectorToCoord(normal.direction, 1))
         if test1.min > test2.max or test2.min > test1.max then
             --This is a seperating axis, therefore there is no collison.
-            print(test1.min ..'   '.. test1.max)
-            print(test2.min ..'   '.. test2.max)
             return false
         else
             --This side does intersect.
@@ -178,5 +174,21 @@ function findIntersection(shape1, shape2)
 
         end
     end
-return true
+    for i, k in pairs(shape2.hitbox) do
+        local normal = getNormal(shape2.hitbox, i)
+        local test1 = hitboxProj(shape2, vectorToCoord(normal.direction, 1))
+        local test2 = hitboxProj(shape1, vectorToCoord(normal.direction, 1))
+        if test1.min > test2.max or test2.min > test1.max then
+            --This is a seperating axis, therefore there is no collison.
+            return false
+        else
+            --This side does intersect.
+            --calculate displacement
+            displacement = math.min(displacement, test1.max - test2.min, test2.max - test1.min)
+            testDisp1 = test1.max - test2.min
+            testDisp2 = test2.max - test1.min
+
+        end
+    end
+return displacement
 end

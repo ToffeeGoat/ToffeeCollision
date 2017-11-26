@@ -18,9 +18,19 @@ function pentagon(radius)
     return verts
 end
 
-hitbox1 = {x = 200, y = 200, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
-hitbox2 = {x = 200, y = 240, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
+function printTableCoords(table)
+    for i, coord in pairs(table) do
+        print('table['..i..']     '..'x = '..coord.x..'     y = '..coord.y)
+    end
+end
+
+
+hitbox1 = {x = 200, y = 230, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
+hitbox2 = {x = 200, y = 240, hitbox = pentagon(5)}
 hitbox3 = {x = 200, y = 241, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
+
+printTableCoords(hitbox2.hitbox)
+print(hitbox2.y + hitbox2.hitbox[1].y)
 
 test1 = findIntersection(hitbox1, hitbox2)
 test2 = findIntersection(hitbox2, hitbox3)

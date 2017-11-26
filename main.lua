@@ -1,79 +1,55 @@
 --Hello wonderful world of misery!
---NOTE addImpulse is broken
+
 
 
 require "toffeeMath"
-
 function love.load()
-  --NOTE THESE HITBOXES ARE NOT STORED CLOCKWISE
-    player = {x = 200, y = 20, direction = 180, speed = 5, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
-  --  wall = {x = 200, y = 300, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
-    walls = {}
-    gravity = {direction = 180, speed = 0.4}
-    jump = {direction = 0, speed = 8}
-    speed = 4
-    onGround = false
-    for i = 1, 20 do
-      newWall =  {x = 20 * i, y = 300, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
-      table.insert(walls, newWall)
-    end
+    box1 = {x = 200, y = 230, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
+    box2 = {x = 200, y = 230, hitbox = pentagon(50)}
+    speed = 1
 end
 
 function love.update(dt)
---[[MOVEMENT
-    if love.keyboard.isDown('left') then
-        player.x = player.x - speed
-    end
-    if love.keyboard.isDown('right') then
-        player.x = player.x + speed
-    end
+    print(findIntersection(box1, box2))
 
     if love.keyboard.isDown('down') then
-        player.y = player.y + speed
+        box1.y = box1.y + speed
+    end
+    if love.keyboard.isDown('up') then
+        box1.y = box1.y - speed
+    end
+    if love.keyboard.isDown('left') then
+        box1.x = box1.x - speed
+    end
+    if love.keyboard.isDown('right') then
+        box1.x = box1.x + speed
     end
 
-]]
-    if love.keyboard.isDown('up') and onGround then
-        addImpulse(player, jump)
-        onGround = false
-    end
-
-    --Add gravity impulse
-    --
-    if test ~= 0 or onGround == false then
-        addImpulse(player, gravity)
-    end
-
-    --Don't go too fast
-    if player.speed > 10 then
-        player.speed = 10
-    end
-
---Move player
---NOTE this needs to be re-ordered, player movement should occur after collision detection
-newPos = vectorToCoord(player.direction, player.speed)
-player.x = player.x + newPos.x
-player.y = player.y + newPos.y
-
-    for i, wall in pairs(walls) do
-        test = axisAlignedDetect(player, wall)
-        if test.magnitude < 0 then
-              player.speed = 0
-              player.y = player.y + test.magnitude
-              test = 0
-            onGround = true
-          --  print("INTERSECTION")
-        else
-          --  print("We good fam")
-        end
-    end
 end
 
 function love.draw()
-    love.graphics.setColor(200, 50, 50)
-    love.graphics.rectangle('fill', player.x, player.y, 20, 20)
-    love.graphics.setColor(50, 200, 50)
-    for i, wall in pairs(walls) do
-        love.graphics.rectangle('fill', wall.x, wall.y, 20, 20)
+    love.graphics.setColor(200, 200, 200)
+    drawHitbox(box2)
+    drawHitbox(box1)
+end
+
+function pentagon(radius)
+    local direction = 0
+    local verts = {}
+    for i = 1, 5 do
+        newVert = vectorToCoord(direction, radius)
+        direction = direction + 72
+        table.insert(verts, newVert)
+    end
+    return verts
+end
+
+function drawHitbox(object)
+    for i, vert in pairs(object.hitbox) do
+        if i < #object.hitbox then
+            love.graphics.line(vert.x + object.x, vert.y + object.y, object.hitbox[i+1].x + object.x, object.hitbox[i+1].y + object.y)
+        else
+            love.graphics.line(vert.x + object.x, vert.y+ object.y, object.hitbox[1].x + object.x, object.hitbox[1].y + object.y)
+        end
     end
 end
