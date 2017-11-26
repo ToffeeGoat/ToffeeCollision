@@ -13,6 +13,19 @@ function sq(x)
   return x*x
 end
 
+--Use this to add or subtract from a direction while keeping things in 0-359 space
+function addDeg(angle, addition)
+    newAng = angle + addition
+    if newAng > 359 then
+        newAng = newAng - 360
+    elseif newAng < 0 then
+        newAng = newAng + 360
+    end
+    return newAng
+end
+
+
+
 --uses atan 2 to convert a coordinate into a direction
 function getDirection(x, y)
   angle = math.atan(y/x)
@@ -39,12 +52,12 @@ end
 
   --adds and impulse to the currect real vector of an Object
 function addImpulse(object, impulse)
-  objectCoord = vectorToCoord((object.direction), (object.speed))
-  impulseCoord = vectorToCoord((impulse.direction), (impulse.speed))
-  newSpeed = vectorAddition(objectCoord, impulseCoord)
-  object.direction = getDirection(newSpeed.x, newSpeed.y)
+  objectCoord = vectorToCoord((object.direction), (object.magnitude))
+  impulseCoord = vectorToCoord((impulse.direction), (impulse.magnitude))
+  newMagnitude = vectorAddition(objectCoord, impulseCoord)
+  object.direction = getDirection(newmagnitude.x, newMagnitude.y)
   vectorZero = {x = 0, y = 0}
-  object.speed = getDistance(vectorZero, newSpeed)
+  object.magnitude = getDistance(vectorZero, newMagnitude)
 end
 
 -- gets a position from an object.
@@ -114,11 +127,11 @@ function getNormal(hitbox)
   local normals = {}
   for i, nrm in pairs(hitbox) do
     if i < #hitbox then
-      vec = vectorSubtraction(hitbox[i], hitbox[i + 1])
+      vec = vectorSubtraction(hitbox[i + 1], hitbox[i])
     else
-      vectorSubtraction(hitbox[i], hitbox[1])
+      vec = vectorSubtraction(hitbox[1], hitbox[i])
     end
-    angle = getDirection(vec.x, vec.y) - 90
+    angle = addDeg(getDirection(vec.x, vec.y), -90)
     newNormal = {direction = angle, magnitude = 1}
     table.insert(normals, newNormal)
   end

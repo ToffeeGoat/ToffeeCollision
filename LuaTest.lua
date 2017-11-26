@@ -7,7 +7,9 @@ function assert(expected, got)
     end
 end
 
-vec1 = {direction = 180, speed = 10}
-vec2 = {direction = 180, speed = 5}
-vec3 = addImpulse(vec1, vec2)
-print(vec3.direction)
+hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}
+nrm = getNormal(hitbox)
+print(nrm[1].direction)
+print(nrm[2].direction)
+print(nrm[3].direction)
+print(nrm[4].direction)

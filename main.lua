@@ -6,7 +6,7 @@ require "toffeeMath"
 
 function love.load()
   --NOTE THESE HITBOXES ARE NOT STORED CLOCKWISE
-    player = {x = 200, y = 20, direction = 180, speed = 5, hitbox = {{x = -10, y = -10},{x = -10, y = 10},{x = 10, y = 10},{x = 10, y = -10}}}
+    player = {x = 200, y = 20, direction = 180, speed = 5, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
   --  wall = {x = 200, y = 300, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
     walls = {}
     gravity = {direction = 180, speed = 0.4}
@@ -14,7 +14,7 @@ function love.load()
     speed = 4
     onGround = false
     for i = 1, 20 do
-      newWall =  {x = 20 * i, y = 300, hitbox = {{x = -10, y = -10},{x = -10, y = 10},{x = 10, y = 10},{x = 10, y = -10}}}
+      newWall =  {x = 20 * i, y = 300, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
       table.insert(walls, newWall)
     end
 end
