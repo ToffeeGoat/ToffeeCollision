@@ -4,19 +4,25 @@
 
 require "toffeeMath"
 function love.load()
-    box1 = {x = 200, y = 230, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
-    box2 = {x = 200, y = 230, hitbox = polygon(6, 50)}
-    box3 = {x = 200, y = 230, hitbox = {{x = -10, y = -10},{x = 10, y = -10},{x = 10, y = 10},{x = -10, y = 10}}}
+    box1 = {x = 200, y = 230, hitbox = polygon(5, 20)}
+    box2 = {x = 200, y = 230, hitbox = polygon(5, 50)}
+    box3 = {x = 200, y = 230, hitbox = polygon(5, 20)}
     speed = 3
 end
 
 function love.update(dt)
-    intersect = (findIntersection(box1, box2))
+    intersect = findIntersection(box1, box2)
+    if intersect then
+        print(intersect.direction)
+    else
+        print('false')
+    end
     if intersect then
         newPos = vectorToCoord(intersect.direction, intersect.magnitude)
     else
         newPos = {x = 0, y = 0}
     end
+
     box3.x = box1.x + newPos.x
     box3.y = box1.y + newPos.y
 
@@ -45,7 +51,7 @@ function love.draw()
 end
 
 function polygon(sides, radius)
-    local direction = 0
+    local direction = 45
     local verts = {}
     for i = 1, sides do
         newVert = vectorToCoord(direction, radius)

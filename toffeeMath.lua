@@ -158,46 +158,53 @@ tinyCoord = vectorToCoord(getDirection(P.x, P.y), -1000)
 return {min = projMin.distance, max = projMax.distance}
 end
 
---This function solves collision for two axis-aligned bounding boxes.
+--This function solves collision for bounding boxes.
 function findIntersection(shape1, shape2)
-    local displacement = 99999999
-    for i, k in pairs(shape2.hitbox) do
-        local normal = getNormal(shape2.hitbox, i)
-        print(normal.direction)
-        local test1 = hitboxProj(shape2, vectorToCoord(normal.direction, 1))
-        local test2 = hitboxProj(shape1, vectorToCoord(normal.direction, 1))
-        if test1.min > test2.max or test2.min > test1.max then
-            --This is a seperating axis, therefore there is no collison.
-            return false
-        else
-            --This side does intersect.
-            --calculate displacement
-            local disp1 = test1.max - test2.min
-            local disp2 = test2.max - test1.min
-            if disp1 < displacement or disp2 < displacement then
-                displacement = math.min(disp1, disp2)
-                dispAngle = normal.direction
+    --Get axes to test.
+    --MTV means 'minimum translation vector' ie. the shortest vector of intersection
+    local axes1 = {}
+    local axes2 = {}
+    local overlap = false
+    local MTV = {direction = 0, magnitude = 99999}
+
+    for i, vert in pairs(shape1.hitbox) do
+        nrm = getNormal(shape1.hitbox, i)
+        table.insert(axes1, nrm)
+    end
+    for i, vert in pairs(shape2.hitbox)do
+        nrm = getNormal(shape2.hitbox, i)
+        table.insert(axes2, nrm)
+    end
+
+    --now that we have the axes, we have to project along each of them
+    for i, axis in pairs(axes1) do
+        test1 = hitboxProj(shape1, vectorToCoord(axis.direction, axis.magnitude))
+        test2 = hitboxProj(shape2, vectorToCoord(axis.direction, axis.magnitude))
+        if test2.max > test1.min then
+            overlap = true
+            if test2.max - test1.min < MTV.magnitude then
+                MTV.direction = axes1[i].direction
+                MTV.magnitude = test2.max - test1.min
             end
+        else
+            return false
         end
     end
-    for i, k in pairs(shape1.hitbox) do
-        local normal = getNormal(shape2.hitbox, i)
-        print(normal.direction)
-        local test1 = hitboxProj(shape1, vectorToCoord(normal.direction, 1))
-        local test2 = hitboxProj(shape2, vectorToCoord(normal.direction, 1))
-        if test1.min > test2.max or test2.min > test1.max then
-            --This is a seperating axis, therefore there is no collison.
-            return false
-        else
-            --This side does intersect.
-            --calculate displacement
-            local disp1 = test1.max - test2.min
-            local disp2 = test2.max - test1.min
-            if disp1 < displacement or disp2 < displacement then
-                displacement = math.min(disp1, disp2)
-                dispAngle = normal.direction
+
+    --now that we have the axes, we have to project along each of them
+    for i, axis in pairs(axes2) do
+        test1 = hitboxProj(shape1, vectorToCoord(axis.direction, axis.magnitude))
+        test2 = hitboxProj(shape2, vectorToCoord(axis.direction, axis.magnitude))
+        if test2.max > test1.min then
+            overlap = true
+            if test2.max - test1.min < MTV.magnitude then
+                MTV.direction = axes2[i].direction
+                MTV.magnitude = test2.max - test1.min
             end
+        else
+            return false
         end
     end
-return {direction = dispAngle, magnitude = displacement}
+
+    return MTV
 end
