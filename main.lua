@@ -4,21 +4,24 @@
 
 require "toffeeMath"
 function love.load()
-    box1 = {x = 200, y = 230, hitbox = polygon(5, 20)}
-    box2 = {x = 200, y = 230, hitbox = polygon(5, 50)}
-    box3 = {x = 200, y = 230, hitbox = polygon(5, 20)}
+    box1 = {x = 200, y = 230, hitbox = polygon(3, 50, 0)}
+    box2 = {x = 200, y = 230, hitbox = polygon(3, 50, 90)}
+    box3 = {x = 200, y = 230, hitbox = polygon(3, 50, 0)}
     speed = 3
+    modif = 0
 end
 
 function love.update(dt)
-    intersect = findIntersection(box1, box2)
+    foundIntersect = findIntersection(box1, box2)
+    intersect = foundIntersect[1]
     if intersect then
-        print(intersect.direction)
+        print(intersect.direction ..'     '.. intersect.magnitude)
     else
         print('false')
     end
+
     if intersect then
-        newPos = vectorToCoord(intersect.direction, intersect.magnitude)
+        newPos = vectorToCoord(intersect.direction, intersect.magnitude + modif)
     else
         newPos = {x = 0, y = 0}
     end
@@ -38,6 +41,15 @@ function love.update(dt)
     if love.keyboard.isDown('right') then
         box1.x = box1.x + speed
     end
+    if love.keyboard.isDown('1') then
+        modif = modif - 1
+    end
+    if love.keyboard.isDown('2') then
+        modif = modif + 1
+    end
+    if love.keyboard.isDown('return') then
+        modif = 0
+    end
 
 end
 
@@ -48,10 +60,11 @@ function love.draw()
     love.graphics.line(box1.x, box1.y, box2.x, box2.y)
     love.graphics.setColor(200, 0, 0)
     drawHitbox(box3)
+    love.graphics.setColor(200, 150, 10)
 end
 
-function polygon(sides, radius)
-    local direction = 45
+function polygon(sides, radius, rotation)
+    local direction = rotation
     local verts = {}
     for i = 1, sides do
         newVert = vectorToCoord(direction, radius)

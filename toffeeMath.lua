@@ -159,6 +159,9 @@ return {min = projMin.distance, max = projMax.distance}
 end
 
 --This function solves collision for bounding boxes.
+--NOTE this currently can't solve triangles: current hypotheses is that the issue is actually the angle of the edges
+--Less than 90 degress may be the root of the issue
+
 function findIntersection(shape1, shape2)
     --Get axes to test.
     --MTV means 'minimum translation vector' ie. the shortest vector of intersection
@@ -176,12 +179,13 @@ function findIntersection(shape1, shape2)
         table.insert(axes2, nrm)
     end
 
+    --print(#axes1 .. '    ' .. #axes2)
+
     --now that we have the axes, we have to project along each of them
     for i, axis in pairs(axes1) do
         test1 = hitboxProj(shape1, vectorToCoord(axis.direction, axis.magnitude))
         test2 = hitboxProj(shape2, vectorToCoord(axis.direction, axis.magnitude))
-        if test2.max > test1.min then
-            overlap = true
+        if test2.max > test1.min or test1.max > test2.min then
             if test2.max - test1.min < MTV.magnitude then
                 MTV.direction = axes1[i].direction
                 MTV.magnitude = test2.max - test1.min
@@ -195,8 +199,7 @@ function findIntersection(shape1, shape2)
     for i, axis in pairs(axes2) do
         test1 = hitboxProj(shape1, vectorToCoord(axis.direction, axis.magnitude))
         test2 = hitboxProj(shape2, vectorToCoord(axis.direction, axis.magnitude))
-        if test2.max > test1.min then
-            overlap = true
+        if test2.max > test1.min or test1.max > test2.min then
             if test2.max - test1.min < MTV.magnitude then
                 MTV.direction = axes2[i].direction
                 MTV.magnitude = test2.max - test1.min
@@ -206,5 +209,5 @@ function findIntersection(shape1, shape2)
         end
     end
 
-    return MTV
+    return {MTV}
 end
